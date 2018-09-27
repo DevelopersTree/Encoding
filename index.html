@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <meta name="description" content="">
+  <meta name="author" content="">
+  <link rel="icon" href="../../../../favicon.ico">
+
+  <title>UTF Encoding</title>
+
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO"
+    crossorigin="anonymous">
+  <link rel="stylesheet" href="style.css" />
+</head>
+
+<nav class="container">
+  <div>
+    <div class="row col-sm-12 personal-space">
+      <h1 class="h3 mb-3 font-weight-normal ">UTF Encoding</h1>
+    </div>
+  </div>
+  <div class="fill row">
+    <div class="col col-md-6">
+      <textarea type="text" id="userInput" class="form-control user-input no-margin" placeholder="Write your text here..."></textarea>
+    </div>
+    <div class="col col-md-6">
+      <div id="output" class="output"></div>
+    </div>
+  </div>
+  <div>
+    <div class="row personal-space">
+      <div class="col col-md-4 form-inline">
+        <label class="control-label">Encoding: </label>
+        <select id="encodingType" class="form-control">
+          <option value="8" selected>UTF-8</option>
+          <option id="utf16" value="16">UTF-16</option>
+          <option id="utf32" value="32">UTF-32</option>
+        </select>
+      </div>
+      <div class="col col-md-4 form-inline">
+        <label class="control-label">Base: </label>
+        <select id="base" class="form-control">
+          <option value="2">Binary (2)</option>
+          <option value="8">Octal (8)</option>
+          <option value="10">Decimal (10)</option>
+          <option value="16" selected>Hexadecimal (16)</option>
+        </select>
+      </div>
+      <div class="col col-md-4 form-inline">
+        <label class="control-label">Direction: </label>
+        <div class="btn-group btn-group-toggle" data-toggle="buttons">
+          <label class="btn btn-secondary active">
+            <input type="radio" name="direction" value="ltr" autocomplete="off" checked> Left to right
+          </label>
+          <label class="btn btn-secondary">
+            <input type="radio" name="direction" value="rtl" autocomplete="off"> Right to left
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <div class="row personal-space">
+      <button id="convertButton" class="btn btn-lg btn-primary btn-block">Convert</button>
+    </div>
+
+    <div class="row personal-space">
+      <div class="col-sm-12">
+        <center>A <a href="https://github.com/developerstree">Developers Tree</a> Project, Fork it on <a href="https://github.com/developerstree/encoding">GitHub</a>.</center>
+      </div>
+    </div>
+
+    <div class="row personal-space"></div>
+  </div>
+</nav>
+
+<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo"
+  crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js" integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49"
+  crossorigin="anonymous"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js" integrity="sha384-ChfqqxuZUCnJSK3+MXmPNIyE6ZbWh2IMqE241rYiqJxyMiZ6OW/JmZQ5stwEULTy"
+  crossorigin="anonymous"></script>
+<script src="script.js"></script>
+<script>
+  $(document).ready(() => {
+    $("#convertButton").click(convert);
+    $('input:radio[name="direction"]').change(changeDirection);
+
+    let items = [$("#utf16"), $("#utf32")];
+    items.forEach(i => i.text(i.text() + " (" + getEndianness() + ")"));
+  })
+
+  function convert() {
+    let text = $("#userInput").val();
+    let output = $("#output");
+    let encodingType = $("#encodingType").val();
+    let base = $("#base").val();
+
+    console.log(encodingType);
+    console.log(base);
+
+    let result = encodeToUtf8(text, base);
+    console.log("text: " + text + ", result: " + result);
+    output.html(result);
+    $('[data-toggle="tooltip"]').tooltip()
+  }
+
+  function changeDirection() {
+    if (this.checked) {
+      $("#output").attr("dir", $(this).val());
+      $("#userInput").attr("dir", $(this).val());
+
+      if ($(this).val() === "rtl")
+        $("#output").addClass("dir-rtl");
+      else
+        $("#output").removeClass("dir-rtl");
+    }
+  }
+</script>
+
+</html>

@@ -1,0 +1,54 @@
+.container {
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  flex-direction: column;
+}
+
+.container > .fill {
+  flex: 1;
+}
+.output {
+  display: block;
+  height: 100%;
+  background-color: whitesmoke;
+  border: solid gray 1px;
+  font-family: monospace;
+  border-radius: 3px;
+  font-size: 14px;
+  padding: 10px;
+  overflow-y: scroll;
+}
+
+.col-md-6 .user-input {
+  height: 100%;
+  resize: none;
+}
+
+.personal-space {
+  margin-top: 10px;
+}
+
+.cluster {
+  margin: 0px;
+  margin-right: 2px;
+  border-bottom: solid 1px magenta;
+}
+
+.col {
+  margin-top: 10px;
+}
+
+.dir-rtl .cluster {
+  float: right;
+  margin: 0px;
+  margin-left: 8px;
+}
+
+#convertButton {
+  margin: 0 0.75em;
+}
+
+.control-label {
+  margin-right: 10px;
+}

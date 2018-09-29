@@ -1,85 +1,173 @@
-function encodeToUtf8(text, base) {
+function encodeInUtf8(text, base, _) {
     let html = "";
 
     for (let i = 0; i < text.length; i++) {
         let char = text.charAt(i);
-        var charCode = char.codePointAt(0);
+        let charCode = char.codePointAt(0);
         let bytes = [];
         setBytesFromCharCode(charCode, bytes, 0, getBytesForCharCode(charCode))
-        var bytesInHexa = "";
 
-        for (let j = 0; j < bytes.length; j++) {
-            bytesInHexa += bytes[j].toString(base);
-            if (j != bytes.length - 1)
-                bytesInHexa += " ";
-        }
-
-        let name = char;
-        if (char in unprintableNames)
-            name = unprintableNames[char];
-        
-        html += createSpan(bytesInHexa, name) + "\n";
+        html += formatCharacter(char, bytes, base);
     }
 
     return html;
+}
+
+function encodeInUtf16(text, base, littleEndian) {
+    let html = "";
+    for (let i = 0; i < text.length; i++) {
+        let char = text.charAt(i);
+        var next = i < text.length - 1 ? text.codePointAt(i + 1) : null;
+        let bytes = codePointToUtf16(text.codePointAt(i), littleEndian);
+
+        html += formatCharacter(char, bytes, base);
+    }
+
+    return html;
+}
+
+function encodeInUtf32(text, base, littleEndian) {
+    let html = "";
+    for (let i = 0; i < text.length; i++) {
+        let char = text.charAt(i);
+        var next = i < text.length - 1 ? text.codePointAt(i + 1) : null;
+        let bytes = codePointToUtf32(text.codePointAt(i), littleEndian, 4);
+
+        html += formatCharacter(char, bytes, base);
+    }
+
+    return html;
+}
+
+// https://en.wikipedia.org/wiki/UTF-16
+function codePointToUtf16(codePoint, littleEndian) {
+    if (codePoint < 0xD7FF || (codePoint >= 0xE000 && codePoint <= 0xFFFF)) {
+        return codePointToUtf32(codePoint, littleEndian, 2);
+    } else if (codePoint >= 0xD800 && codePoint <= 0xDFFF) {
+        return [codePoint];
+    } else if (codePoint >= 0x10000 && codePoint <= 0x10FFFF) {
+        codePoint -= 0x10000;
+        let highSurrogate = Math.floor(codePoint / 0x400) + 0xD800;
+        let lowSurrogate = (codePoint % 0x400) + 0xDC00;
+
+        let byte1 = Math.floor(highSurrogate / 0x100);
+        let byte2 = highSurrogate % 0x100;
+        let byte3 = Math.floor(lowSurrogate / 0x100);
+        let byte4 = lowSurrogate % 0x100;
+
+        if (littleEndian) {
+            return [byte2, byte1, byte4, byte3]
+        } else {
+            return [byte1, byte2, byte3, byte4];
+        }
+    }
+
+    throw new RangeError("codePoint must be between 0x0 and 0x10FFFF");
+}
+
+function codePointToUtf32(number, littleEndian, padTo) {
+    let digits = [];
+    while (number > 0) {
+        let remainder = number % 16;
+        number = Math.floor(number / 16);
+
+        digits.push(remainder);
+    }
+
+    if (digits.length % 2 != 0) {
+        digits.push(0);
+    }
+
+    let bytes = [];
+    for (let i = digits.length - 1; i >= 0; i -= 2) {
+        let currentDigits = [];
+
+        if (i == 0) {
+            currentDigits.push(0);
+            currentDigits.push(toHexDigit(digits[i]));
+        } else {
+            currentDigits.push(toHexDigit(digits[i]));
+            currentDigits.push(toHexDigit(digits[i - 1]));
+        }
+
+        let hex = currentDigits.join('');
+        let number = parseInt(hex, 16);
+        bytes.push(number);
+    }
+
+    for (let j = bytes.length; j < padTo; j++) {
+        bytes.unshift(0);
+    }
+
+    if (littleEndian)
+        return bytes.reverse();
+
+    return bytes;
+}
+
+function toHexDigit(decimal) {
+    if (decimal < 10)
+        return decimal;
+
+    let hexDigits = ['A', 'B', 'C', 'D', 'E', 'F'];
+    return hexDigits[decimal - 10];
+}
+
+function formatCharacter(char, bytes, base) {
+    var bytesInHexa = "";
+
+    for (let j = 0; j < bytes.length; j++) {
+        bytesInHexa += bytes[j].toString(base);
+        if (j != bytes.length - 1)
+            bytesInHexa += " ";
+    }
+
+    let name = char;
+    if (char in unprintableNames)
+        name = unprintableNames[char];
+
+    return createSpan(bytesInHexa, name) + "\n";
 }
 
 function createSpan(content, tooltip) {
     return "<span class='cluster' data-toggle='tooltip' title='" + tooltip + "'>" + content + "</span>";
 }
 
-let unprintableNames = 
-{
-    "\x00" : "<null>",
-    "\x01" : "<start of heading>",
-    "\x02" : "<start of text>",
-    "\x03" : "<end of text>",
-    "\x04" : "<end of transmission>",
-    "\x05" : "<enquiry>",
-    "\x06" : "<acknowledge>",
-    "\x07" : "<bell>",
-    "\x08" : "<backpace>",
-    "\x09" : "<horizontal tab>",
-    "\x0A" : "<line feed, new line>",
-    "\x0B" : "<vertical tab>",
-    "\x0C" : "<form feed, new page>",
-    "\x0D" : "<carriage return>",
-    "\x0E" : "<shift out>",
-    "\x0F" : "<shift in>",
-    "\x10" : "<data link escape>",
-    "\x11" : "<device control 1>",
-    "\x12" : "<device control 2>",
-    "\x13" : "<device control 3>",
-    "\x14" : "<device control 4>",
-    "\x15" : "<negative acknowledge>",
-    "\x16" : "<synchonous idle>",
-    "\x17" : "<end of transmission block>",
-    "\x18" : "<cancel>",
-    "\x19" : "<end of medium>",
-    "\x1A" : "<substitute>",
-    "\x1B" : "<escape>",
-    "\x1C" : "<file separator>",
-    "\x1D" : "<group separator>",
-    "\x1E" : "<record separator>",
-    "\x1F" : "<unit separator>",
-    "\x20" : "<space>",
-    "\x7F" : "<delete"
-}
-
-// From: https://stackoverflow.com/a/19606031/7003797
-// Authors: Ryan (https://stackoverflow.com/u/1133577) and 
-//          Stefan Rein (https://stackoverflow.com/u/4641479)
-// License: Attribution-ShareAlike 3.0 Unported (CC BY-SA 3.0)
-
-function getEndianness() {
-    var arrayBuffer = new ArrayBuffer(2);
-    var uint8Array = new Uint8Array(arrayBuffer);
-    var uint16array = new Uint16Array(arrayBuffer);
-    uint8Array[0] = 0xAA; // set first byte
-    uint8Array[1] = 0xBB; // set second byte
-    if(uint16array[0] === 0xBBAA) return "LE";
-    if(uint16array[0] === 0xAABB) return "BE";
-    else throw new Error("Something crazy just happened");
+let unprintableNames = {
+    "\x00": "<null>",
+    "\x01": "<start of heading>",
+    "\x02": "<start of text>",
+    "\x03": "<end of text>",
+    "\x04": "<end of transmission>",
+    "\x05": "<enquiry>",
+    "\x06": "<acknowledge>",
+    "\x07": "<bell>",
+    "\x08": "<backpace>",
+    "\x09": "<horizontal tab>",
+    "\x0A": "<line feed, new line>",
+    "\x0B": "<vertical tab>",
+    "\x0C": "<form feed, new page>",
+    "\x0D": "<carriage return>",
+    "\x0E": "<shift out>",
+    "\x0F": "<shift in>",
+    "\x10": "<data link escape>",
+    "\x11": "<device control 1>",
+    "\x12": "<device control 2>",
+    "\x13": "<device control 3>",
+    "\x14": "<device control 4>",
+    "\x15": "<negative acknowledge>",
+    "\x16": "<synchonous idle>",
+    "\x17": "<end of transmission block>",
+    "\x18": "<cancel>",
+    "\x19": "<end of medium>",
+    "\x1A": "<substitute>",
+    "\x1B": "<escape>",
+    "\x1C": "<file separator>",
+    "\x1D": "<group separator>",
+    "\x1E": "<record separator>",
+    "\x1F": "<unit separator>",
+    "\x20": "<space>",
+    "\x7F": "<delete"
 }
 
 // UTF8 encoding functions
@@ -89,17 +177,17 @@ function getEndianness() {
 
 function getBytesForCharCode(charCode) {
     if (charCode < 128) {
-      return 1;
+        return 1;
     } else if (charCode < 2048) {
-      return 2;
+        return 2;
     } else if (charCode < 65536) {
-      return 3;
+        return 3;
     } else if (charCode < 2097152) {
-      return 4;
+        return 4;
     }
     throw new Error('CharCode ' + charCode + ' cannot be encoded with UTF8.');
-  }
-  
+}
+
 
 function setBytesFromCharCode(charCode, bytes, byteOffset, neededBytes) {
     charCode = charCode | 0;

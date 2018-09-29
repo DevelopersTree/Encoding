@@ -17,47 +17,46 @@
 
 <nav class="container">
   <div>
-    <div class="row col-sm-12 personal-space">
+    <div class="row col-md-12 personal-space">
       <h1 class="h3 mb-3 font-weight-normal ">UTF Encoding</h1>
     </div>
   </div>
-  <div class="fill row">
-    <div class="col col-md-6">
+  <div class="big row">
+    <div class="col-md-6 personal-space">
       <textarea type="text" id="userInput" class="form-control user-input no-margin" placeholder="Write your text here..."></textarea>
     </div>
-    <div class="col col-md-6">
+    <div class="col-md-6 personal-space">
       <div id="output" class="output"></div>
     </div>
   </div>
   <div>
     <div class="row personal-space">
-      <div class="col col-md-4 form-inline">
-        <label class="control-label">Encoding: </label>
-        <select id="encodingType" class="form-control">
-          <option value="8" selected>UTF-8</option>
-          <option id="utf16" value="16">UTF-16</option>
-          <option id="utf32" value="32">UTF-32</option>
+      <div class="col col-md-3">
+        <select id="encodingType" title="Encoding" class="form-control">
+          <option value="8">UTF-8</option>
+          <option value="16" selected>UTF-16</option>
+          <option value="32">UTF-32</option>
         </select>
       </div>
-      <div class="col col-md-4 form-inline">
-        <label class="control-label">Base: </label>
-        <select id="base" class="form-control">
+      <div class="col col-md-3">
+        <select id="base" class="form-control input-block-level" title="Base">
           <option value="2">Binary (2)</option>
           <option value="8">Octal (8)</option>
           <option value="10">Decimal (10)</option>
           <option value="16" selected>Hexadecimal (16)</option>
         </select>
       </div>
-      <div class="col col-md-4 form-inline">
-        <label class="control-label">Direction: </label>
-        <div class="btn-group btn-group-toggle" data-toggle="buttons">
-          <label class="btn btn-secondary active">
-            <input type="radio" name="direction" value="ltr" autocomplete="off" checked> Left to right
-          </label>
-          <label class="btn btn-secondary">
-            <input type="radio" name="direction" value="rtl" autocomplete="off"> Right to left
-          </label>
-        </div>
+      <div class="col col-md-3">
+        <select id="endianness" class="form-control input-block-level" title="Endianness">
+          <option value="1" select>Little Endian</option>
+          <option value="0">Big Endian</option>
+        </select>
+      </div>
+      <div class="col col-md-3">
+        <select id="direction" class="form-control input-block-level" title="Direction">
+          <option value="ltr" select>Left To Right</option>
+          <option value="rtl">Right To Left</option>
+        </select>
       </div>
     </div>
 
@@ -85,37 +84,29 @@
 <script>
   $(document).ready(() => {
     $("#convertButton").click(convert);
-    $('input:radio[name="direction"]').change(changeDirection);
-
-    let items = [$("#utf16"), $("#utf32")];
-    items.forEach(i => i.text(i.text() + " (" + getEndianness() + ")"));
   })
 
   function convert() {
+    changeDirection();
+    let littleEndian = parseInt($("#endianness").val());
     let text = $("#userInput").val();
     let output = $("#output");
-    let encodingType = $("#encodingType").val();
+    let encodeFunction = "encodeInUtf" + $("#encodingType").val();
     let base = $("#base").val();
-
-    console.log(encodingType);
-    console.log(base);
-
-    let result = encodeToUtf8(text, base);
-    console.log("text: " + text + ", result: " + result);
-    output.html(result);
-    $('[data-toggle="tooltip"]').tooltip()
+    let encoded = window[encodeFunction](text, base, littleEndian);
+    output.html(encoded);
+    $('[data-toggle="tooltip"]').tooltip();
   }
 
   function changeDirection() {
-    if (this.checked) {
-      $("#output").attr("dir", $(this).val());
-      $("#userInput").attr("dir", $(this).val());
+    let direction = $("#direction").val();
+    $("#output").attr("dir", direction);
+    $("#userInput").attr("dir", direction);
 
-      if ($(this).val() === "rtl")
-        $("#output").addClass("dir-rtl");
-      else
-        $("#output").removeClass("dir-rtl");
-    }
+    if (direction === "rtl")
+      $("#output").addClass("dir-rtl");
+    else
+      $("#output").removeClass("dir-rtl");
   }
 </script>
 

@@ -5,8 +5,8 @@
   flex-direction: column;
 }
 
-.container > .fill {
-  flex: 1;
+.big {
+  height: 350px;
 }
 .output {
   display: block;
@@ -33,6 +33,7 @@
   margin: 0px;
   margin-right: 2px;
   border-bottom: solid 1px magenta;
+  direction: ltr;
 }
 
 .col {

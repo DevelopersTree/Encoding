@@ -3,9 +3,15 @@ function encodeInUtf8(text, base, _) {
 
     for (let i = 0; i < text.length; i++) {
         let char = text.charAt(i);
-        let charCode = char.codePointAt(0);
+        let codePoint = text.codePointAt(i);
+
+        if (text.codePointAt(i) != char.codePointAt(0) && i < text.length - 1) {
+           char = [text.charAt(i), text.charAt(i + 1)].join("");
+           i++; // Skip low surrogate character
+        }
+        
         let bytes = [];
-        setBytesFromCharCode(charCode, bytes, 0, getBytesForCharCode(charCode))
+        setBytesFromCharCode(codePoint, bytes, 0, getBytesForCharCode(codePoint))
 
         html += formatCharacter(char, bytes, base);
     }
@@ -17,14 +23,15 @@ function encodeInUtf16(text, base, littleEndian) {
     let html = "";
     for (let i = 0; i < text.length; i++) {
         let char = text.charAt(i);
+        let codePoint = text.codePointAt(i);
+
+        if (text.codePointAt(i) != char.codePointAt(0) && i < text.length - 1) {
+           char = [text.charAt(i), text.charAt(i + 1)].join("");
+           i++; // Skip low surrogate character
+        }
         
-        console.log(text.codePointAt(i).toString(16))
-        let bytes = codePointToUtf16(text.codePointAt(i), littleEndian);
-
+        let bytes = codePointToUtf16(codePoint, littleEndian);
         html += formatCharacter(char, bytes, base);
-
-        if (text.codePointAt(i) != char.codePointAt(0))
-            i ++; // Skip low surrogate character
     }
 
     return html;
@@ -34,8 +41,14 @@ function encodeInUtf32(text, base, littleEndian) {
     let html = "";
     for (let i = 0; i < text.length; i++) {
         let char = text.charAt(i);
-        let bytes = codePointToUtf32(text.codePointAt(i), littleEndian, 4);
+        let codePoint = text.codePointAt(i);
 
+        if (text.codePointAt(i) != char.codePointAt(0) && i < text.length - 1) {
+           char = [text.charAt(i), text.charAt(i + 1)].join("");
+           i++; // Skip low surrogate character
+        }
+        
+        let bytes = codePointToUtf32(codePoint, littleEndian, 4);
         html += formatCharacter(char, bytes, base);
     }
 

@@ -17,10 +17,14 @@ function encodeInUtf16(text, base, littleEndian) {
     let html = "";
     for (let i = 0; i < text.length; i++) {
         let char = text.charAt(i);
-        var next = i < text.length - 1 ? text.codePointAt(i + 1) : null;
+        
+        console.log(text.codePointAt(i).toString(16))
         let bytes = codePointToUtf16(text.codePointAt(i), littleEndian);
 
         html += formatCharacter(char, bytes, base);
+
+        if (text.codePointAt(i) != char.codePointAt(0))
+            i ++; // Skip low surrogate character
     }
 
     return html;
@@ -30,7 +34,6 @@ function encodeInUtf32(text, base, littleEndian) {
     let html = "";
     for (let i = 0; i < text.length; i++) {
         let char = text.charAt(i);
-        var next = i < text.length - 1 ? text.codePointAt(i + 1) : null;
         let bytes = codePointToUtf32(text.codePointAt(i), littleEndian, 4);
 
         html += formatCharacter(char, bytes, base);
@@ -49,7 +52,6 @@ function codePointToUtf16(codePoint, littleEndian) {
         codePoint -= 0x10000;
         let highSurrogate = Math.floor(codePoint / 0x400) + 0xD800;
         let lowSurrogate = (codePoint % 0x400) + 0xDC00;
-
         let byte1 = Math.floor(highSurrogate / 0x100);
         let byte2 = highSurrogate % 0x100;
         let byte3 = Math.floor(lowSurrogate / 0x100);
